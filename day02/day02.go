@@ -15,14 +15,8 @@ func Result(file string) (int, error) {
 		for _, d := range data {
 
 			groups := pattern.FindStringSubmatch(d)
-			i0, e0 := strconv.Atoi(groups[1])
-			_ = e0
-			i1, e1 := strconv.Atoi(groups[2])
-			_ = e1
-			c := []rune(groups[3])[0]
-			passwd := groups[4]
+			i0, i1, c, passwd := atoi(groups[1]), atoi(groups[2]), runeAt(groups[3], 0), groups[4]
 			if check(i0, i1, c, passwd) {
-
 				count = count + 1
 			}
 		}
@@ -49,14 +43,8 @@ func ResultB(file string) (int, error) {
 		for _, d := range data {
 
 			groups := pattern.FindStringSubmatch(d)
-			i0, e0 := strconv.Atoi(groups[1])
-			_ = e0
-			i1, e1 := strconv.Atoi(groups[2])
-			_ = e1
-			c := []rune(groups[3])[0]
-			passwd := groups[4]
+			i0, i1, c, passwd := atoi(groups[1]), atoi(groups[2]), runeAt(groups[3], 0), groups[4]
 			if check2(i0, i1, c, passwd) {
-
 				count = count + 1
 			}
 		}
@@ -66,8 +54,19 @@ func ResultB(file string) (int, error) {
 }
 
 func check2(pos0 int, pos1 int, c rune, val string) bool {
-	runes := []rune(val)
-	b0 := runes[pos0-1] == c
-	b1 := runes[pos1-1] == c
+	b0 := runeAt(val, pos0-1) == c
+	b1 := runeAt(val, pos1-1) == c
 	return b0 && !b1 || b1 && !b0
+}
+
+func atoi(s string) int {
+	i0, e0 := strconv.Atoi(s)
+	if e0 != nil {
+		panic(e0)
+	}
+	return i0
+}
+
+func runeAt(s string, index int) rune {
+	return []rune(s)[index]
 }
