@@ -8,7 +8,7 @@ import (
 )
 
 func Result(file string) (int, error) {
-	if data, err := reader.ReadNumbers(file); err == nil {
+	if data, err := reader.ReadStrings(file); err == nil {
 		if ndata, err := toNum(data); err == nil {
 
 			for _, i1 := range ndata {
@@ -25,7 +25,7 @@ func Result(file string) (int, error) {
 }
 
 func ResultB(file string) (int, error) {
-	if data, err := reader.ReadNumbers(file); err == nil {
+	if data, err := reader.ReadStrings(file); err == nil {
 		if ndata, err := toNum(data); err == nil {
 
 			for _, i1 := range ndata {

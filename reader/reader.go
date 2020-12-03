@@ -6,7 +6,7 @@ import (
 	"os"
 )
 
-func ReadNumbers(filepath string) ([]string, error) {
+func ReadStrings(filepath string) ([]string, error) {
 	retval := make([]string, 0)
 	file, err := os.Open(filepath)
 	if err != nil {

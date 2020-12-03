@@ -27,8 +27,8 @@ func TestResultB(t *testing.T) {
 	if err2 != nil {
 		t.Error(err2)
 	}
-	if r2 != 157059 {
-		t.Errorf("ResultB was incorrect, got: %d, want: %d.", r2, 157059)
+	if r2 != 165080960 {
+		t.Errorf("ResultB was incorrect, got: %d, want: %d.", r2, 165080960)
 	}
 
 }
