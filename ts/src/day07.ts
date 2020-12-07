@@ -1,5 +1,6 @@
 
 import { readLinesFromFile } from './reader'
+import { equals } from './sets'
 
 class CountedBag {
   color: string
@@ -42,7 +43,7 @@ function resultA(fileName: string): number {
 
   while (true) {
     const oc2 = findWrappers(bags, outerColors)
-    if (difference(oc2, outerColors).size == 0) {
+    if (equals(oc2, outerColors)) {
       break;
     }
     outerColors = oc2
@@ -84,10 +85,3 @@ function countBags(bags: CountedBag[], color: string): number {
 
 export { resultA, resultB }
 
-function difference<T>(setA: Set<T>, setB: Set<T>) {
-  var _difference = new Set(setA);
-  for (var elem of setB) {
-    _difference.delete(elem);
-  }
-  return _difference;
-}
