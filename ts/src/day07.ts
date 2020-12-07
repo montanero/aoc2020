@@ -42,7 +42,7 @@ function resultA(fileName: string): number {
 
   while (true) {
     const oc2 = findWrappers(bags, outerColors)
-    if (difference(oc2 , outerColors).size == 0) {
+    if (difference(oc2, outerColors).size == 0) {
       break;
     }
     outerColors = oc2
@@ -52,7 +52,7 @@ function resultA(fileName: string): number {
 }
 
 function findWrappers(bags: CountedBag[], s: Set<string>): Set<string> {
-  var ret = new Set(s)
+  let ret = new Set(s)
   for (const cb of bags) {
     for (const cc of cb.contains.map(co => co.color)) {
       if (s.has(cc)) {
@@ -63,19 +63,31 @@ function findWrappers(bags: CountedBag[], s: Set<string>): Set<string> {
   return ret
 }
 
-
 function resultB(fileName: string): number {
-  const answers = readFile(fileName)
-  let count = 0
+  const mybag = "shiny gold"
+  const bags = readFile(fileName)
+  let count = countBags(bags, mybag)
+  return count -1
+}
+
+function countBags(bags: CountedBag[], color: string): number {
+  let bag = bags.find(x => x.color === color)
+  if (bag === undefined) {
+    return 0
+  }
+  let count = 1
+  for (let sb of bag.contains) {
+    count += sb.count * countBags(bags, sb.color)
+  }
   return count
 }
 
 export { resultA, resultB }
 
-function difference<T> (setA:Set<T>, setB:Set<T>) {
+function difference<T>(setA: Set<T>, setB: Set<T>) {
   var _difference = new Set(setA);
   for (var elem of setB) {
-      _difference.delete(elem);
+    _difference.delete(elem);
   }
   return _difference;
 }
