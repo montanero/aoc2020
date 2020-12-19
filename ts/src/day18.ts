@@ -115,3 +115,75 @@ export function resultA(fileName: string): number {
     }
     return akku
 }
+
+export class EvaluatorB {
+    evaluate(tokens: Token[]): number {
+        const [i, akku] = this.evalProduct(tokens, 0)
+        return akku
+    }
+
+    evalProduct(tokens: Token[], i: number): [idx: number, result: number] {
+        let akku: number = 0;
+
+        [i, akku] = this.evalSum(tokens, i)
+
+        while (i < tokens.length) {
+            let t: Token = tokens[i++]
+            if (t == '*') {
+                let op: number
+                [i, op] = this.evalSum(tokens, i)
+                akku *= op
+            } else {
+                --i
+                break
+            }
+        }
+        return [i, akku]
+    }
+
+    evalSum(tokens: Token[], i: number): [idx: number, result: number] {
+        let akku: number = 0;
+
+        [i, akku] = this.evalSimple(tokens, i)
+
+        while (i < tokens.length) {
+            let t: Token = tokens[i++]
+            if (t == '+') {
+                let op: number
+                [i, op] = this.evalSimple(tokens, i)
+                akku += op
+            } else {
+                --i
+                break
+            }
+        }
+        return [i, akku]
+    }
+
+    evalSimple(tokens: Token[], i: number): [idx: number, result: number] {
+        let t = tokens[i++]
+        if (t === '(') {
+            let akku: number;
+            [i, akku] = this.evalProduct(tokens, i)
+            t = tokens[i++]
+            if (t != ')') {
+                throw ("haeh")
+            }
+            return [i, akku]
+        } else if (typeof (t) === 'number') {
+            return [i, t]
+        } else {
+            throw ("haeh")
+        }
+    }
+}
+
+export function resultB(fileName: string): number {
+    let tokens = Parser.readFile(fileName)
+    let s = new EvaluatorB()
+    let akku = 0
+    for (const e of tokens) {
+        akku += s.evaluate(e)
+    }
+    return akku
+}
