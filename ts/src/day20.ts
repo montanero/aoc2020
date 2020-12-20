@@ -182,7 +182,7 @@ class Solver {
 
     constructor(tiles: Tile[]) {
         this.tiles = tiles
-        this.WIDTH = Math.max(tiles.length)
+        this.WIDTH = Math.sqrt(tiles.length)
         this.field = new Array(this.tiles.length)
     }
 
@@ -192,6 +192,7 @@ class Solver {
                 .map(tile => [Orientation.NONE_NONE, Orientation.NONE_RIGHT, Orientation.NONE_TWO, Orientation.NONE_LEFT]
                     .map(ori => new OrientedTile(tile, ori)))
                 .reduce((a, b) => a.concat(b))
+            //return [ new OrientedTile(unassigned[1], Orientation.VERTICAL_NONE)]
         }
         const [x, y] = this.toXy(idx)
         if (y == 0) {
@@ -232,6 +233,7 @@ class Solver {
             return false
         }
 
+        let [i, max, percent] = [0, ots.length, 0]
         for (const ot of ots) {
             this.field[idx] = ot
             let nun = [...unassigned]
@@ -240,6 +242,14 @@ class Solver {
             if (ret) {
                 return ret
             }
+            if (idx == 0) {
+                let pn = Math.floor(100*i/max)
+                if (pn > percent){
+                    console.log(`${pn}%`)
+                    percent = pn
+                }
+            }
+            i++
         }
         return false
     }
@@ -258,5 +268,8 @@ export function resultA(filename: string): number {
     let tiles = Reader.parse(filename)
     let s = new Solver(tiles)
     s.solve()
-    return 42
+    return s.field[s.fromXy(0, 0)].tile.tileId *
+        s.field[s.fromXy(s.WIDTH - 1, 0)].tile.tileId *
+        s.field[s.fromXy(0, s.WIDTH - 1)].tile.tileId *
+        s.field[s.fromXy(s.WIDTH - 1, s.WIDTH - 1)].tile.tileId
 }
