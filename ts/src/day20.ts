@@ -1,4 +1,5 @@
 import {readLinesFromFile} from './reader'
+import {hasIntersection, intersect} from './sets'
 
 
 export enum Border {
@@ -69,6 +70,7 @@ export class Tile {
     lines: string[]
     borders: number[][] = [] // 1. Border 2. Orientation
     patterns: Set<number>
+    neighbours: Set<Tile> = new Set()
 
     constructor(id: number, lines: string[]) {
         this.tileId = id
@@ -170,7 +172,8 @@ class OrientedTile {
 class Solver {
     readonly WIDTH: number
     readonly tiles: Tile[]
-    readonly field: OrientedTile[]
+    readonly field: Tile[]
+    readonly orientedField: OrientedTile[]
 
     toXy(idx: number): [x: number, y: number] {
         return [idx % this.WIDTH, Math.floor(idx / this.WIDTH)]
@@ -184,80 +187,111 @@ class Solver {
         this.tiles = tiles
         this.WIDTH = Math.sqrt(tiles.length)
         this.field = new Array(this.tiles.length)
+        this.orientedField = new Array(this.tiles.length)
+        this.findPossibleNeighbours(tiles)
     }
 
-    getPossibleOrientedTiles(unassigned: Tile[], idx: number): OrientedTile[] {
-        if (idx == 0) {
-            return unassigned
-                .map(tile => [Orientation.NONE_NONE, Orientation.NONE_RIGHT, Orientation.NONE_TWO, Orientation.NONE_LEFT]
-                    .map(ori => new OrientedTile(tile, ori)))
-                .reduce((a, b) => a.concat(b))
-            //return [ new OrientedTile(unassigned[1], Orientation.VERTICAL_NONE)]
+    private findPossibleNeighbours(tiles: Tile[]) {
+        for (const t of tiles) {
+            for (const n of tiles) {
+                if (n !== t) {
+                    if (hasIntersection(t.patterns, n.patterns)) {
+                        t.neighbours.add(n)
+                    }
+                }
+            }
         }
+    }
+
+    getPossibleTiles(unassigned: Set<Tile>, idx: number): Set<Tile> {
+        let ret = new Set(unassigned)
         const [x, y] = this.toXy(idx)
-        if (y == 0) {
-            const leftBorder = this.field[idx - 1].borders[Border.RIGHT]
-            return unassigned
-                .map(tile => tile
-                    .getOrientations(Border.LEFT, leftBorder)
-                    .map(o => new OrientedTile(tile, o)))
-                .reduce((a, b) => a.concat(b))
+        if (y > 0) {
+            ret = intersect(ret, this.field[this.fromXy(x, y - 1)].neighbours)
         }
-        if (x == 0) {
-            const topBorder = this.field[this.fromXy(x, y - 1)].borders[Border.BOTTOM]
-            return unassigned
-                .map(tile => tile
-                    .getOrientations(Border.TOP, topBorder)
-                    .map(o => new OrientedTile(tile, o)))
-                .reduce((a, b) => a.concat(b))
+        if (x > 0) {
+            ret = intersect(ret, this.field[this.fromXy(x - 1, y)].neighbours)
         }
-
-        const topBorder = this.field[this.fromXy(x, y - 1)].borders[Border.BOTTOM]
-        const leftBorder = this.field[this.fromXy(x - 1, y)].borders[Border.RIGHT]
-        return unassigned
-            .map(tile => {
-                let o1 = tile.getOrientations(Border.LEFT, leftBorder);
-                let o2 = tile.getOrientations(Border.TOP, topBorder);
-                return o1.filter(o => o2.includes(o))
-                    .map(o => new OrientedTile(tile, o))
-            }).reduce((a, b) => a.concat(b))
+        let xBorder = (x === 0) || (x === this.WIDTH - 1)
+        let yBorder = (y === 0) || (y === this.WIDTH - 1)
+        if (!xBorder || !yBorder) {
+            [...ret]
+                .filter(t => t.neighbours.size == 2)
+                .forEach(t => ret.delete(t))
+        }
+        if (!xBorder && !yBorder) {
+            [...ret]
+                .filter(t => t.neighbours.size == 3)
+                .forEach(t => ret.delete(t))
+        }
+        return ret
     }
 
-    solveSub(unassigned: Tile[], idx: number): boolean {
-        if (unassigned.length === 0) {
-            return true
+    solveSub(unassigned: Set<Tile>, idx: number): boolean {
+        if (unassigned.size === 0) {
+            return this.checkOrientations()
         }
 
-        const ots = this.getPossibleOrientedTiles(unassigned, idx)
-        if (ots.length === 0) {
+        const ots = this.getPossibleTiles(unassigned, idx)
+        if (ots.size === 0) {
             return false
         }
 
-        let [i, max, percent] = [0, ots.length, 0]
-        for (const ot of ots) {
+        let sots = [...ots].sort((a, b) => a.neighbours.size - b.neighbours.size)
+        for (const ot of sots) {
             this.field[idx] = ot
-            let nun = [...unassigned]
-            nun.splice(nun.findIndex(t => t === ot.tile), 1)
+            let nun = new Set(unassigned)
+            nun.delete(ot)
             const ret = this.solveSub(nun, idx + 1)
             if (ret) {
                 return ret
             }
-            if (idx == 0) {
-                let pn = Math.floor(100*i/max)
-                if (pn > percent){
-                    console.log(`${pn}%`)
-                    percent = pn
-                }
+        }
+        return false
+    }
+
+    private findPossibleOrientations(idx: number): OrientedTile[] {
+        let [x, y] = this.toXy(idx)
+        let tile = this.field[idx]
+        let ret = new Set(orientations)
+        if (x > 0) {
+            let leftBorder = this.orientedField[this.fromXy(x - 1, y)].borders[Border.RIGHT];
+            [...orientations]
+                .filter(o => tile.borders[o][Border.LEFT] !== leftBorder)
+                .forEach(o => ret.delete(o))
+        }
+        if (y > 0) {
+            let topBorder = this.orientedField[this.fromXy(x, y - 1)].borders[Border.BOTTOM];
+            [...orientations]
+                .filter(o => tile.borders[o][Border.TOP] !== topBorder)
+                .forEach(o => ret.delete(o))
+        }
+        return [...ret].map(o => new OrientedTile(tile, o))
+    }
+
+    checkOrientationsSub(idx: number): boolean {
+        if (idx >= this.orientedField.length) {
+            return true
+        }
+
+        const ots = this.findPossibleOrientations(idx)
+        for (const ot of ots) {
+            this.orientedField[idx] = ot
+            const ret = this.checkOrientationsSub(idx + 1)
+            if (ret) {
+                return ret
             }
-            i++
         }
         return false
     }
 
 
-    solve(): void {
+    checkOrientations(): boolean {
+        return this.checkOrientationsSub(0)
+    }
 
-        let rv = this.solveSub(this.tiles, 0)
+    solve(): void {
+        let rv = this.solveSub(new Set(this.tiles), 0)
         if (!rv) {
             throw  "no solution"
         }
@@ -268,8 +302,15 @@ export function resultA(filename: string): number {
     let tiles = Reader.parse(filename)
     let s = new Solver(tiles)
     s.solve()
-    return s.field[s.fromXy(0, 0)].tile.tileId *
-        s.field[s.fromXy(s.WIDTH - 1, 0)].tile.tileId *
-        s.field[s.fromXy(0, s.WIDTH - 1)].tile.tileId *
-        s.field[s.fromXy(s.WIDTH - 1, s.WIDTH - 1)].tile.tileId
+    return s.field[s.fromXy(0, 0)].tileId *
+        s.field[s.fromXy(s.WIDTH - 1, 0)].tileId *
+        s.field[s.fromXy(0, s.WIDTH - 1)].tileId *
+        s.field[s.fromXy(s.WIDTH - 1, s.WIDTH - 1)].tileId
+}
+
+export function resultB(filename: string): number {
+    let tiles = Reader.parse(filename)
+    let s = new Solver(tiles)
+    s.solve()
+    return 42
 }

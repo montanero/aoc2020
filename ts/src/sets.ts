@@ -1,4 +1,4 @@
-function difference<T>(setA: Set<T>, setB: Set<T>): Set<T> {
+export function difference<T>(setA: Set<T>, setB: Set<T>): Set<T> {
     var _difference = new Set(setA);
     for (let elem of setB) {
         _difference.delete(elem);
@@ -6,7 +6,7 @@ function difference<T>(setA: Set<T>, setB: Set<T>): Set<T> {
     return _difference;
 }
 
-function union<T>(setA: Set<T>, setB: Set<T>): Set<T> {
+export function union<T>(setA: Set<T>, setB: Set<T>): Set<T> {
     var _union = new Set(setA);
     for (let elem of setB) {
         _union.add(elem);
@@ -14,7 +14,7 @@ function union<T>(setA: Set<T>, setB: Set<T>): Set<T> {
     return _union;
 }
 
-function intersect<T>(setA: Set<T>, setB: Set<T>): Set<T> {
+export function intersect<T>(setA: Set<T>, setB: Set<T>): Set<T> {
     var _intersect = new Set(setA);
     for (let elem of setA) {
         if (!setB.has(elem)) {
@@ -24,8 +24,15 @@ function intersect<T>(setA: Set<T>, setB: Set<T>): Set<T> {
     return _intersect;
 }
 
-function equals<T>(setA: Set<T>, setB: Set<T>): boolean {
-    return difference (union(setA, setB), setB).size == 0
+export function equals<T>(setA: Set<T>, setB: Set<T>): boolean {
+    return difference(union(setA, setB), setB).size == 0
 }
 
-export { difference, union, intersect, equals }
+export function hasIntersection<T>(setA: Set<T>, setB: Set<T>): boolean {
+    for (let elem of setA) {
+        if (setB.has(elem)) {
+            return true
+        }
+    }
+    return false
+}

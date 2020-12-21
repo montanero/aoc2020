@@ -1,11 +1,19 @@
-import {resultA, Bits, Tile, Border, Orientation} from './day20';
+import {resultA, resultB, Bits, Tile, Border, Orientation} from './day20';
 
 test('test A', () => {
     expect(resultA("data/day20/test.txt")).toBe(20899048083289);
 });
 
+test('test B', () => {
+    expect(resultB("data/day20/test.txt")).toBe(20899048083289);
+});
+
 test('result A', () => {
     expect(resultA("data/day20/input.txt")).toBe(160);
+});
+
+test('result B', () => {
+    expect(resultB("data/day20/input.txt")).toBe(160);
 });
 
 test('test Bits rotate', () => {
