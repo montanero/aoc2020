@@ -9,7 +9,7 @@ test('test B', () => {
 });
 
 test('result A', () => {
-    expect(resultA("data/day20/input.txt")).toBe(160);
+    expect(resultA("data/day20/input.txt")).toBe(18482479935793);
 });
 
 test('result B', () => {
@@ -54,11 +54,4 @@ test('test Tile construction', () => {
     expect(bh[Border.RIGHT]).toBe(0b111100000)
     expect(bh[Border.BOTTOM]).toBe(0b1110)
     expect(bh[Border.LEFT]).toBe(0b110)
-
-    const bv = tile.borders[Orientation.VERTICAL_NONE]
-    expect(bv[Border.TOP]).toBe(0b111000000)
-    expect(bv[Border.RIGHT]).toBe(0b110000000)
-    expect(bv[Border.BOTTOM]).toBe(0b10)
-    expect(bv[Border.LEFT]).toBe(0b11110)
-
 });

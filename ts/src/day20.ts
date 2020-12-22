@@ -18,9 +18,7 @@ enum Rotation {
 
 enum Flip {
     NONE = 0 * 4,
-    HORIZONTAL = 1 * 4,
-    VERTICAL = 2 * 4,
-    BOTH = 3 * 4
+    HORIZONTAL = 1 * 4
 }
 
 export enum Orientation {
@@ -33,16 +31,6 @@ export enum Orientation {
     HORIZONTAL_RIGHT = Flip.HORIZONTAL | Rotation.RIGHT,
     HORIZONTAL_TWO = Flip.HORIZONTAL | Rotation.TWO,
     HORIZONTAL_LEFT = Flip.HORIZONTAL | Rotation.LEFT,
-
-    VERTICAL_NONE = Flip.VERTICAL | Rotation.NONE,
-    VERTICAL_RIGHT = Flip.VERTICAL | Rotation.RIGHT,
-    VERTICAL_TWO = Flip.VERTICAL | Rotation.TWO,
-    VERTICAL_LEFT = Flip.VERTICAL | Rotation.LEFT,
-
-    BOTH_NONE = Flip.BOTH | Rotation.NONE,
-    BOTH_RIGHT = Flip.BOTH | Rotation.RIGHT,
-    BOTH_TWO = Flip.BOTH | Rotation.TWO,
-    BOTH_LEFT = Flip.BOTH | Rotation.LEFT,
 }
 
 let orientations: Orientation[] = Object.values(Orientation).filter(value => typeof value === 'number').map(s => +s)
@@ -84,9 +72,7 @@ export class Tile {
 
         this.borders = this.borders.concat(
             this.rotations(borders),
-            this.rotations(this.flipHorizontal(borders)),
-            this.rotations(this.flipVertical(borders)),
-            this.rotations(this.flipHorizontal(this.flipVertical(borders))))
+            this.rotations(this.flipHorizontal(borders)))
         let l = this.borders.map(r => r[0])
         this.patterns = new Set(l)
     }
@@ -111,14 +97,6 @@ export class Tile {
             borders[Border.LEFT],
             Bits.rotate(borders[Border.BOTTOM], LEN),
             borders[Border.RIGHT]]
-    }
-
-    private flipVertical(borders: number[]): number[] {
-        return [
-            borders[Border.BOTTOM],
-            Bits.rotate(borders[Border.RIGHT], LEN),
-            borders[Border.TOP],
-            Bits.rotate(borders[Border.LEFT], LEN)]
     }
 
     getOrientations(border: Border, value: number) {
@@ -170,12 +148,8 @@ class OrientedTile {
 
     private static flip(flip: Flip, x: number, y: number): [x: number, y: number] {
         switch (flip) {
-            case Flip.VERTICAL:
-                return [x, LEN - y - 1]
             case Flip.HORIZONTAL:
                 return [LEN - x - 1, y]
-            case Flip.BOTH:
-                return [LEN - x - 1, LEN - y - 1]
             default:
                 return [x, y]
         }
