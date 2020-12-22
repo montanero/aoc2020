@@ -167,6 +167,42 @@ class OrientedTile {
         this.orientation = orientation
         this.borders = tile.borders[orientation]
     }
+
+    private static flip(flip: Flip, x: number, y: number): [x: number, y: number] {
+        switch (flip) {
+            case Flip.VERTICAL:
+                return [x, LEN - y - 1]
+            case Flip.HORIZONTAL:
+                return [LEN - x - 1, y]
+            case Flip.BOTH:
+                return [LEN - x - 1, LEN - y - 1]
+            default:
+                return [x, y]
+        }
+    }
+
+    private static rotate(rotation: Rotation, x: number, y: number): [x: number, y: number] {
+        switch (rotation) {
+            case Rotation.RIGHT:
+                return [LEN - y - 1, x]
+            case Rotation.LEFT:
+                return [y, LEN - x - 1]
+            case Rotation.TWO:
+                return [LEN - x - 1, LEN - y - 1]
+            default:
+                return [x, y]
+        }
+
+    }
+
+    getPixel(x: number, y: number): boolean {
+        const flip = (this.orientation & 0b1100) as Flip
+        const rotation = (this.orientation & 0b11) as Rotation
+        [x, y] = OrientedTile.flip(flip, x, y);
+        [x, y] = OrientedTile.rotate(rotation, x, y)
+        return this.tile.lines[y][x] == '#'
+    }
+
 }
 
 class Solver {
@@ -203,7 +239,7 @@ class Solver {
         }
     }
 
-    getPossibleTiles(unassigned: Set<Tile>, idx: number): Set<Tile> {
+    private getPossibleTiles(unassigned: Set<Tile>, idx: number): Set<Tile> {
         let ret = new Set(unassigned)
         const [x, y] = this.toXy(idx)
         if (y > 0) {
@@ -296,6 +332,24 @@ class Solver {
             throw  "no solution"
         }
     }
+
+    render(): boolean[][] {
+        const KWIDTH = this.orientedField[0].tile.lines[0].length - 2
+        let rows: boolean[][] = []
+        for (let yk = 0; yk < this.WIDTH; yk++) {
+            for (let yl = 0; yl < KWIDTH; yl++) {
+                let row: boolean[] = []
+                rows.push(row)
+                for (let xk = 0; xk < this.WIDTH; xk++) {
+                    let otile = this.orientedField[this.fromXy(xk, yk)]
+                    for (let xl = 0; xl < KWIDTH; xl++) {
+                        row.push(otile.getPixel(xl + 1, yl + 1))
+                    }
+                }
+            }
+        }
+        return rows
+    }
 }
 
 export function resultA(filename: string): number {
@@ -308,9 +362,124 @@ export function resultA(filename: string): number {
         s.field[s.fromXy(s.WIDTH - 1, s.WIDTH - 1)].tileId
 }
 
+function stringify(i: boolean[][]): string[] {
+    return i.map(l => l.map(b => (b ? "#" : ".") as string).reduce((a, b) => a + b))
+}
+
+class Bitmap {
+    bits: boolean[][]
+
+    constructor(bits: boolean[][]) {
+        this.bits = bits
+    }
+
+    width(): number {
+        return this.bits[0].length
+    }
+
+    height(): number {
+        return this.bits.length
+    }
+
+    static fromStrings(lines: string[]) {
+        return new Bitmap(lines.map(l => l.split("").map(c => (c == "#" ? true : false))))
+    }
+
+    rotate(): Bitmap {
+        const bits: boolean[][] = []
+        for (let x = 0; x < this.width(); x++) {
+            let line: boolean[] = []
+            bits.push(line)
+            for (let y = 0; y < this.height(); y++) {
+                line.unshift(this.bits[y][x])
+            }
+        }
+        return new Bitmap(bits)
+    }
+
+    flip(): Bitmap {
+        const bits: boolean[][] = []
+        for (let y = 0; y < this.height(); y++) {
+            let line: boolean[] = []
+            bits.push(line)
+            for (let x = 0; x < this.width(); x++) {
+                line.unshift(this.bits[y][x])
+            }
+        }
+        return new Bitmap(bits)
+    }
+
+    containsAt(o: Bitmap, x0: number, y0: number): boolean {
+        for (let x = 0; x < o.width(); x++) {
+            for (let y = 0; y < o.height(); y++) {
+                if (o.bits[y][x] && !this.bits[y + y0][x + x0]) {
+                    return false
+                }
+            }
+        }
+        return true
+    }
+
+    count(o: Bitmap): number {
+        let count = 0
+        for (let x = 0; x < this.width() - o.width(); x++) {
+            for (let y = 0; y < this.height() - o.height(); y++) {
+                if (this.containsAt(o, x, y)) {
+                    count++
+                }
+            }
+        }
+        return count
+    }
+
+    countOnes(): number {
+        return this.bits.map(l => l.map(b => (b ? 1 : 0) as number).reduce((a, b) => a + b)).reduce((a, b) => a + b)
+    }
+
+}
+
+function countRotations(i: Bitmap, o: Bitmap): number {
+    let count = i.count(o)
+    if (count != 0) {
+        return count
+    }
+    for (let j = 0; j < 3; j++) {
+        i = i.rotate()
+        count += i.count(o)
+        if (count != 0) {
+            return count
+        }
+    }
+    i = i.flip()
+    count = i.count(o)
+    if (count != 0) {
+        return count
+    }
+    for (let j = 0; j < 3; j++) {
+        i = i.rotate()
+        count += i.count(o)
+        if (count != 0) {
+            return count
+        }
+    }
+    return count
+}
+
 export function resultB(filename: string): number {
     let tiles = Reader.parse(filename)
     let s = new Solver(tiles)
     s.solve()
-    return 42
+    let bits = s.render()
+    let x = stringify(bits)
+    let dragonStr = [
+        "                  # ",
+        "#    ##    ##    ###",
+        " #  #  #  #  #  #   "]
+    let dragon = Bitmap.fromStrings(dragonStr)
+    let image = new Bitmap(bits)
+    let count = countRotations(image, dragon)
+
+    let nbits = image.countOnes() - count * dragon.countOnes()
+
+    return nbits
 }

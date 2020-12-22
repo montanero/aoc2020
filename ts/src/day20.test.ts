@@ -5,7 +5,7 @@ test('test A', () => {
 });
 
 test('test B', () => {
-    expect(resultB("data/day20/test.txt")).toBe(20899048083289);
+    expect(resultB("data/day20/test.txt")).toBe(273);
 });
 
 test('result A', () => {
