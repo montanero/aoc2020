@@ -135,7 +135,7 @@ class Reader {
     }
 }
 
-class OrientedTile {
+export class OrientedTile {
     readonly tile: Tile
     readonly orientation: Orientation
     readonly borders: number[]
@@ -158,9 +158,9 @@ class OrientedTile {
     private static rotate(rotation: Rotation, x: number, y: number): [x: number, y: number] {
         switch (rotation) {
             case Rotation.RIGHT:
-                return [LEN - y - 1, x]
-            case Rotation.LEFT:
                 return [y, LEN - x - 1]
+            case Rotation.LEFT:
+                return [LEN - y - 1, x]
             case Rotation.TWO:
                 return [LEN - x - 1, LEN - y - 1]
             default:
@@ -172,9 +172,9 @@ class OrientedTile {
     getPixel(x: number, y: number): boolean {
         const flip = (this.orientation & 0b1100) as Flip
         const rotation = (this.orientation & 0b11) as Rotation
+        [x, y] = OrientedTile.rotate(rotation, x, y);
         [x, y] = OrientedTile.flip(flip, x, y);
-        [x, y] = OrientedTile.rotate(rotation, x, y)
-        return this.tile.lines[y][x] == '#'
+        return this.tile.lines[y][x] === '#'
     }
 
 }
@@ -413,30 +413,23 @@ class Bitmap {
 }
 
 function countRotations(i: Bitmap, o: Bitmap): number {
+    let maxcount = 0
     let count = i.count(o)
-    if (count != 0) {
-        return count
-    }
+    maxcount = Math.max(maxcount, count)
     for (let j = 0; j < 3; j++) {
         i = i.rotate()
         count += i.count(o)
-        if (count != 0) {
-            return count
-        }
+        maxcount = Math.max(maxcount, count)
     }
     i = i.flip()
     count = i.count(o)
-    if (count != 0) {
-        return count
-    }
+    maxcount = Math.max(maxcount, count)
     for (let j = 0; j < 3; j++) {
         i = i.rotate()
         count += i.count(o)
-        if (count != 0) {
-            return count
-        }
+        maxcount = Math.max(maxcount, count)
     }
-    return count
+    return maxcount
 }
 
 export function resultB(filename: string): number {

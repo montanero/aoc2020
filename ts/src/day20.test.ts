@@ -1,4 +1,4 @@
-import {resultA, resultB, Bits, Tile, Border, Orientation} from './day20';
+import {Bits, Border, Orientation, OrientedTile, resultA, resultB, Tile} from './day20';
 
 test('test A', () => {
     expect(resultA("data/day20/test.txt")).toBe(20899048083289);
@@ -13,7 +13,7 @@ test('result A', () => {
 });
 
 test('result B', () => {
-    expect(resultB("data/day20/input.txt")).toBe(160);
+    expect(resultB("data/day20/input.txt")).toBe(2118);
 });
 
 test('test Bits rotate', () => {
@@ -55,3 +55,29 @@ test('test Tile construction', () => {
     expect(bh[Border.BOTTOM]).toBe(0b1110)
     expect(bh[Border.LEFT]).toBe(0b110)
 });
+
+test('test Tile rotation access', () => {
+    let tile = new Tile(4711, [
+        ".#........",
+        "..........",
+        "..........",
+        "..........",
+        "..........",
+        "..........",
+        "..........",
+        "..........",
+        "..........",
+        ".........."
+    ])
+    expect(new OrientedTile(tile, Orientation.NONE_NONE).getPixel(1,0)).toBe(true)
+    expect(new OrientedTile(tile, Orientation.NONE_RIGHT).getPixel(9,1)).toBe(true)
+    expect(new OrientedTile(tile, Orientation.NONE_TWO).getPixel(8,9)).toBe(true)
+    expect(new OrientedTile(tile, Orientation.NONE_LEFT).getPixel(0,8)).toBe(true)
+
+    expect(new OrientedTile(tile, Orientation.HORIZONTAL_NONE).getPixel(8,0)).toBe(true)
+    expect(new OrientedTile(tile, Orientation.HORIZONTAL_RIGHT).getPixel(9,8)).toBe(true)
+    expect(new OrientedTile(tile, Orientation.HORIZONTAL_TWO).getPixel(1,9)).toBe(true)
+    expect(new OrientedTile(tile, Orientation.HORIZONTAL_LEFT).getPixel(0,1)).toBe(true)
+
+
+})
