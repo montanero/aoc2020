@@ -8,5 +8,5 @@ test('result A', () => {
 
 test('result B', () => {
     let s = new SolverB()
-    expect(s.solve("data/day19/input.txt")).toBe(160);
+    expect(s.solve("data/day19/input.txt")).toBe(357);
 });

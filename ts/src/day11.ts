@@ -83,7 +83,6 @@ abstract class SolverBase {
         return filled
       }
       filled = filledNow
-      console.log(filledNow)
     }
   }
 }

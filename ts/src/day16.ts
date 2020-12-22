@@ -168,7 +168,6 @@ export function findSolution(fieldsSoFar: Map<number, string>, possibilities: Ma
 
     if (fieldsSoFar.size > maxdepth) {
         maxdepth = fieldsSoFar.size
-        console.log(maxdepth)
     }
 
     if (possibilities.size === 0) {
